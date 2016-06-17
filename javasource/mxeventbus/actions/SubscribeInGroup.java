@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Note than debounce will operate on the individual groups
- * 
+ *
  * Specifying debounce > 0 will cause the subscription to be done asynchronously.
  */
 public class SubscribeInGroup extends CustomJavaAction<Boolean>
@@ -80,7 +80,7 @@ public class SubscribeInGroup extends CustomJavaAction<Boolean>
                         obs2 = obs.debounce(this.DebounceInMs, TimeUnit.MILLISECONDS);
                     }
 
-                    obs2.subscribe(mendixObj -> {
+                    obs2.take(1).subscribe(mendixObj -> {
                         logger.debug(Commons.prependWithThreadName("Received: " + mendixObj));
                         try {
                             Commons.executeMf(getContext(), this.CallbackMicroflow, mendixObj);
