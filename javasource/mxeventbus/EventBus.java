@@ -4,7 +4,6 @@ import com.mendix.core.Core;
 import com.mendix.logging.ILogNode;
 import mxeventbus.proxies.constants.Constants;
 import rx.Observable;
-import rx.subjects.PublishSubject;
 import rx.subjects.ReplaySubject;
 import rx.subjects.SerializedSubject;
 import rx.subjects.Subject;
@@ -14,17 +13,19 @@ import rx.subjects.Subject;
  */
 public class EventBus {
 
-    public EventBus() {
+    private EventBus() {
         ILogNode logger = Core.getLogger(Constants.getLoggerName());
         logger.info("MxEventBus is starting...");
     }
 
-    private static EventBus INSTANCE = new EventBus();
+    private static class SingletonHolder {
+        private static EventBus INSTANCE = new EventBus();
+    }
 
     private final Subject<Object, Object> subject = new SerializedSubject<>(ReplaySubject.createWithSize(1000));
 
     public static EventBus getInstance() {
-        return INSTANCE;
+        return SingletonHolder.INSTANCE;
     }
 
     public Observable<Object> observe() {
