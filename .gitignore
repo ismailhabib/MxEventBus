@@ -3,3 +3,5 @@ deployment/
 *.launch
 .classpath
 .project
+.idea/
+MxEventBus.mpr.lock

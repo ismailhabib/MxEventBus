@@ -44,6 +44,7 @@ public class UserActionsRegistrar implements EventHandler
 			component.actionRegistry().registerUserAction(mxeventbus.actions.Publish.class);
 			component.actionRegistry().registerUserAction(mxeventbus.actions.Subscribe.class);
 			component.actionRegistry().registerUserAction(mxeventbus.actions.SubscribeInGroup.class);
+			component.actionRegistry().registerUserAction(myfirstmodule.actions.ThrowException.class);
 			component.actionRegistry().registerUserAction(system.actions.VerifyPassword.class);
 		}
 	}

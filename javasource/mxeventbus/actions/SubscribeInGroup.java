@@ -19,6 +19,7 @@ import mxeventbus.Commons;
 import mxeventbus.EventBus;
 import mxeventbus.proxies.constants.Constants;
 import rx.Observable;
+import rx.exceptions.Exceptions;
 import rx.schedulers.Schedulers;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Note than debounce will operate on the individual groups
- *
+ * 
  * Specifying debounce > 0 will cause the subscription to be done asynchronously.
  */
 public class SubscribeInGroup extends CustomJavaAction<Boolean>
@@ -34,15 +35,17 @@ public class SubscribeInGroup extends CustomJavaAction<Boolean>
 	private String EntityName;
 	private String GroupByMicroflow;
 	private String CallbackMicroflow;
+	private String ErrorCallbackMicroflow;
 	private Boolean IsAsync;
 	private Long DebounceInMs;
 
-	public SubscribeInGroup(IContext context, String EntityName, String GroupByMicroflow, String CallbackMicroflow, Boolean IsAsync, Long DebounceInMs)
+	public SubscribeInGroup(IContext context, String EntityName, String GroupByMicroflow, String CallbackMicroflow, String ErrorCallbackMicroflow, Boolean IsAsync, Long DebounceInMs)
 	{
 		super(context);
 		this.EntityName = EntityName;
 		this.GroupByMicroflow = GroupByMicroflow;
 		this.CallbackMicroflow = CallbackMicroflow;
+		this.ErrorCallbackMicroflow = ErrorCallbackMicroflow;
 		this.IsAsync = IsAsync;
 		this.DebounceInMs = DebounceInMs;
 	}
@@ -66,29 +69,36 @@ public class SubscribeInGroup extends CustomJavaAction<Boolean>
                 .groupBy(mendixObj -> {
                     try {
                         return Commons.executeMf(getContext(), this.GroupByMicroflow, mendixObj);
-                    } catch (CoreException e) {
-                        logger.error(e);
+                    } catch (Exception e) {
+                        throw Exceptions.propagate(e);
                     }
-                    return 0;
                 })
                 .subscribe(obs -> {
-                    logger.debug(Commons.prependWithThreadName("New grouped observable key: " + obs.getKey()));
+                            logger.debug(Commons.prependWithThreadName("New grouped observable key: " + obs.getKey()));
 
-                    Observable<IMendixObject> obs2 = obs;
+                            Observable<IMendixObject> obs2 = obs;
 
-                    if (this.DebounceInMs > 0) {
-                        obs2 = obs.debounce(this.DebounceInMs, TimeUnit.MILLISECONDS);
-                    }
+                            if (this.DebounceInMs > 0) {
+                                obs2 = obs.debounce(this.DebounceInMs, TimeUnit.MILLISECONDS);
+                            }
 
-                    obs2.take(1).subscribe(mendixObj -> {
-                        logger.debug(Commons.prependWithThreadName("Received: " + mendixObj));
-                        try {
-                            Commons.executeMf(getContext(), this.CallbackMicroflow, mendixObj);
-                        } catch (CoreException e) {
-                            logger.error(e);
-                        }
-                    });
-                });
+                            obs2.take(1).subscribe(mendixObj -> {
+                                logger.debug(Commons.prependWithThreadName("Received: " + mendixObj));
+                                try {
+                                    Commons.executeMf(getContext(), this.CallbackMicroflow, mendixObj);
+                                } catch (Exception e) {
+                                    logger.error(e);
+                                }
+                            });
+                        },
+                        throwable -> {
+                            logger.error(throwable);
+                            try {
+                                Core.execute(getContext(), this.ErrorCallbackMicroflow);
+                            } catch (Exception e) {
+                                logger.error(e);
+                            }
+                        });
 
         return true;
 		// END USER CODE

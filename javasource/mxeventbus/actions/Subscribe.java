@@ -31,14 +31,16 @@ public class Subscribe extends CustomJavaAction<Boolean>
 {
 	private String EntityName;
 	private String CallbackMicroflow;
+	private String ErrorCallbackMicroflow;
 	private Boolean IsAsync;
 	private Long DebounceInMs;
 
-	public Subscribe(IContext context, String EntityName, String CallbackMicroflow, Boolean IsAsync, Long DebounceInMs)
+	public Subscribe(IContext context, String EntityName, String CallbackMicroflow, String ErrorCallbackMicroflow, Boolean IsAsync, Long DebounceInMs)
 	{
 		super(context);
 		this.EntityName = EntityName;
 		this.CallbackMicroflow = CallbackMicroflow;
+		this.ErrorCallbackMicroflow = ErrorCallbackMicroflow;
 		this.IsAsync = IsAsync;
 		this.DebounceInMs = DebounceInMs;
 	}
@@ -48,9 +50,9 @@ public class Subscribe extends CustomJavaAction<Boolean>
 	{
 		// BEGIN USER CODE
 
-		ILogNode logger = Core.getLogger(Constants.getLoggerName());
+        ILogNode logger = Core.getLogger(Constants.getLoggerName());
 
-		logger.debug(Commons.prependWithThreadName("Subscribing to " + this.EntityName));
+        logger.debug(Commons.prependWithThreadName("Subscribing to " + this.EntityName));
 
         Observable<Object> observable = EventBus.getInstance().observe();
 
@@ -61,16 +63,24 @@ public class Subscribe extends CustomJavaAction<Boolean>
         observable.map(obj -> (IMendixObject) obj)
                 .filter(mendixObj -> mendixObj.getType().equals(this.EntityName));
 
-		if (this.DebounceInMs > 0) {
-			observable = observable.debounce(this.DebounceInMs, TimeUnit.MILLISECONDS);
-		}
+        if (this.DebounceInMs > 0) {
+            observable = observable.debounce(this.DebounceInMs, TimeUnit.MILLISECONDS);
+        }
 
-		observable.subscribe(mendixObj -> {
-					logger.debug(Commons.prependWithThreadName("Received: " + mendixObj));
+        observable.subscribe(mendixObj -> {
+                    logger.debug(Commons.prependWithThreadName("Received: " + mendixObj));
                     try {
-						Commons.executeMf(getContext(), this.CallbackMicroflow, mendixObj);
+                        Commons.executeMf(getContext(), this.CallbackMicroflow, mendixObj);
                     } catch (CoreException e) {
-						logger.error(e);
+                        logger.error(e);
+                    }
+                },
+                throwable -> {
+                    logger.error(throwable);
+                    try {
+                        Core.execute(getContext(), this.ErrorCallbackMicroflow);
+                    } catch (Exception e) {
+                        logger.error(e);
                     }
                 });
 

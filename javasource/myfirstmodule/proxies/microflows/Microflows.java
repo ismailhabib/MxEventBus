@@ -14,6 +14,18 @@ import com.mendix.systemwideinterfaces.core.IContext;
 public class Microflows
 {
 	// These are the microflows for the MyFirstModule module
+	public static void errorMagicCallback(IContext context)
+	{
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			Core.execute(context, "MyFirstModule.ErrorMagicCallback", params);
+		}
+		catch (CoreException e)
+		{
+			throw new MendixRuntimeException(e);
+		}
+	}
 	public static String groupBy(IContext context, myfirstmodule.proxies.Magic _object)
 	{
 		try
@@ -21,6 +33,19 @@ public class Microflows
 			Map<String, Object> params = new HashMap<String, Object>();
 			params.put("Object", _object == null ? null : _object.getMendixObject());
 			return (String)Core.execute(context, "MyFirstModule.GroupBy", params);
+		}
+		catch (CoreException e)
+		{
+			throw new MendixRuntimeException(e);
+		}
+	}
+	public static String groupByThrowException(IContext context, myfirstmodule.proxies.Magic _object)
+	{
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			params.put("Object", _object == null ? null : _object.getMendixObject());
+			return (String)Core.execute(context, "MyFirstModule.GroupByThrowException", params);
 		}
 		catch (CoreException e)
 		{
@@ -70,6 +95,18 @@ public class Microflows
 		{
 			Map<String, Object> params = new HashMap<String, Object>();
 			Core.execute(context, "MyFirstModule.SubscribeToGroupedMagicAsyncWithDebounce", params);
+		}
+		catch (CoreException e)
+		{
+			throw new MendixRuntimeException(e);
+		}
+	}
+	public static void subscribeToGroupedMagicAsyncWithDebounceError(IContext context)
+	{
+		try
+		{
+			Map<String, Object> params = new HashMap<String, Object>();
+			Core.execute(context, "MyFirstModule.SubscribeToGroupedMagicAsyncWithDebounceError", params);
 		}
 		catch (CoreException e)
 		{
