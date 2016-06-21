@@ -75,7 +75,7 @@ public class Subscribe extends CustomJavaAction<Boolean>
         observable.subscribe(mendixObj -> {
                     logger.debug(Commons.prependWithThreadName("Received: " + mendixObj));
                     try {
-                        Commons.executeMf(getContext(), this.CallbackMicroflow, mendixObj);
+                        Commons.executeMf(Core.createSystemContext(), this.CallbackMicroflow, mendixObj);
                     } catch (CoreException e) {
                         logger.error(e);
                     }
@@ -83,7 +83,7 @@ public class Subscribe extends CustomJavaAction<Boolean>
                 throwable -> {
                     logger.error(throwable);
                     try {
-                        Core.execute(getContext(), this.ErrorCallbackMicroflow);
+                        Core.execute(Core.createSystemContext(), this.ErrorCallbackMicroflow);
                     } catch (Exception e) {
                         logger.error(e);
                     }
