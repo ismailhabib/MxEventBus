@@ -34,6 +34,11 @@ public class Publish extends CustomJavaAction<Boolean>
 		// BEGIN USER CODE
 		ILogNode logger = Core.getLogger(Constants.getLoggerName());
 
+		if (!Constants.getEnabled()) {
+			logger.debug("EventBus is disabled, not publishing.");
+			return true;
+		}
+
 		logger.debug(Commons.prependWithThreadName("Publishing "+ this.Obj +" to: " + this.Obj.getType()));
 
 		EventBus.getInstance().post(this.Obj);

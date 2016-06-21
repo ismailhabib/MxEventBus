@@ -52,6 +52,11 @@ public class Subscribe extends CustomJavaAction<Boolean>
 
         ILogNode logger = Core.getLogger(Constants.getLoggerName());
 
+        if (!Constants.getEnabled()) {
+            logger.debug("EventBus is disabled, not subscribing.");
+            return true;
+        }
+
         logger.debug(Commons.prependWithThreadName("Subscribing to " + this.EntityName));
 
         Observable<Object> observable = EventBus.getInstance().observe();

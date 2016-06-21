@@ -10,6 +10,11 @@ public class Constants
 {
 	// These are the constants for the MxEventBus module
 
+	public static boolean getEnabled()
+	{
+		return (Boolean)Core.getConfiguration().getConstantValue("MxEventBus.Enabled");
+	}
+
 	public static String getLoggerName()
 	{
 		return (String)Core.getConfiguration().getConstantValue("MxEventBus.LoggerName");
