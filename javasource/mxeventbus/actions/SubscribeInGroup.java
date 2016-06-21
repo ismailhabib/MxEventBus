@@ -73,24 +73,24 @@ public class SubscribeInGroup extends CustomJavaAction<Boolean>
                 .filter(mendixObj -> mendixObj.getType().equals(this.EntityName))
                 .groupBy(mendixObj -> {
                     try {
-                        return Commons.executeMf(getContext(), this.GroupByMicroflow, mendixObj);
+                        return Commons.executeMf(Core.createSystemContext(), this.GroupByMicroflow, mendixObj);
                     } catch (Exception e) {
                         throw Exceptions.propagate(e);
                     }
                 })
-                .subscribe(obs -> {
-                            logger.debug(Commons.prependWithThreadName("New grouped observable key: " + obs.getKey()));
+                .subscribe(newObservable -> {
+                            logger.debug(Commons.prependWithThreadName("New grouped observable key: " + newObservable.getKey()));
 
-                            Observable<IMendixObject> obs2 = obs;
+                            Observable<IMendixObject> groupedObservable = newObservable;
 
                             if (this.DebounceInMs > 0) {
-                                obs2 = obs.debounce(this.DebounceInMs, TimeUnit.MILLISECONDS);
+                                groupedObservable = groupedObservable.debounce(this.DebounceInMs, TimeUnit.MILLISECONDS);
                             }
 
-                            obs2.take(1).subscribe(mendixObj -> {
+                            groupedObservable.take(1).subscribe(mendixObj -> {
                                 logger.debug(Commons.prependWithThreadName("Received: " + mendixObj));
                                 try {
-                                    Commons.executeMf(getContext(), this.CallbackMicroflow, mendixObj);
+                                    Commons.executeMf(Core.createSystemContext(), this.CallbackMicroflow, mendixObj);
                                 } catch (Exception e) {
                                     logger.error(e);
                                 }
@@ -99,7 +99,7 @@ public class SubscribeInGroup extends CustomJavaAction<Boolean>
                         throwable -> {
                             logger.error(throwable);
                             try {
-                                Core.execute(getContext(), this.ErrorCallbackMicroflow);
+                                Core.execute(Core.createSystemContext(), this.ErrorCallbackMicroflow);
                             } catch (Exception e) {
                                 logger.error(e);
                             }
